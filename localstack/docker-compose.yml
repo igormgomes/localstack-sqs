@@ -1,0 +1,43 @@
+version: "3"
+
+services:
+  localstack:
+    image: localstack/localstack
+    ports:
+      - "4568-4576:4568-4576"
+      - 8080:8080
+    environment:
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      - SERVICES=sqs:4576
+      - DEFAULT_REGION=us-east-1
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - "/private${TMPDIR}:/tmp/localstack"
+    networks:
+      - aws_network
+
+  awscli-setup-resources:
+    image: mesosphere/aws-cli
+    volumes:
+      - ./dev_env:/project/dev_env
+    environment:
+      - AWS_ACCESS_KEY_ID=admin
+      - AWS_SECRET_ACCESS_KEY=adminsecret
+      - AWS_DEFAULT_REGION=us-east-1
+    entrypoint: /bin/sh -c
+    command: >
+      "
+        # Needed so all localstack components will startup correctly (i'm sure there's a better way to do this)
+        sleep 10;
+        aws sqs create-queue --endpoint-url=http://localstack:4576 --queue-name create-user;
+        # you can go on and put initial items in tables...
+      "
+    networks:
+      - aws_network
+    depends_on:
+      - localstack
+
+networks:
+  aws_network:
+
+#aws sqs list-queues --endpoint-url=http://localhost:4576 --region=us-east-1

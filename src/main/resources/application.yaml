@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: localstack-sqs
+
+cloud:
+  aws:
+    stack:
+      auto: false
+    region:
+      static: sa-east-1
+
+user:
+  producer-queue: create-user
+
+server:
+  port: 8081
